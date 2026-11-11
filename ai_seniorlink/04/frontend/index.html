@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银发助手 - 豆包语音对话</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .controls {
+            margin: 30px 0;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 10px;
+        }
+        #startBtn {
+            background-color: #007bff;
+            color: white;
+        }
+        #startBtn:disabled {
+            background-color: #ccc;
+        }
+        #stopBtn {
+            background-color: #dc3545;
+            color: white;
+        }
+        #stopBtn:disabled {
+            background-color: #ccc;
+        }
+        .log-container {
+            text-align: left;
+            background-color: #212529;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ 银发助手 - 语音对话</h1>
+        <p>基于豆包大模型的实时语音交互</p>
+        
+        <div id="status" class="status">准备就绪</div>
+        
+        <div class="controls">
+            <button id="startBtn" onclick="startSession()">开始对话</button>
+            <button id="stopBtn" onclick="stopSession()" disabled>结束对话</button>
+        </div>
+
+        <div class="log-container" id="logs"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let audioContext = null;
+        let mediaStream = null;
+        let audioInput = null;
+        let processor = null;
+        let isRecording = false;
+
+        // 音频配置
+        const SAMPLE_RATE = 24000; // 豆包推荐采样率
+        const BUFFER_SIZE = 4096;
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            if (type === 'error') entry.style.color = '#ff6b6b';
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function updateStatus(text, type = 'normal') {
+            const el = document.getElementById('status');
+            el.textContent = text;
+            el.className = 'status ' + (type === 'connected' ? 'connected' : type === 'error' ? 'error' : '');
+        }
+
+        async function startSession() {
+            try {
+                document.getElementById('startBtn').disabled = true;
+                updateStatus('正在连接...', 'normal');
+
+                // 1. 获取麦克风权限
+                log('正在请求麦克风权限...');
+                mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        channelCount: 1,
+                        sampleRate: 16000, // 浏览器采样率
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    } 
+                });
+
+                // 2. 初始化 WebSocket
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/voice-chat`;
+                log(`连接 WebSocket: ${wsUrl}`);
+                
+                ws = new WebSocket(wsUrl);
+                ws.binaryType = 'arraybuffer';
+
+                ws.onopen = () => {
+                    log('WebSocket 连接成功');
+                    updateStatus('已连接，正在对话中', 'connected');
+                    document.getElementById('stopBtn').disabled = false;
+                    
+                    // 发送开始会话事件
+                    const startEvent = {
+                        event: 'StartSession',
+                        session_config: {
+                            audio_format: 'raw', // 使用 PCM
+                            sample_rate: SAMPLE_RATE
+                        }
+                    };
+                    ws.send(JSON.stringify(startEvent));
+                    
+                    // 开始录音
+                    startRecording();
+                };
+
+                ws.onmessage = async (event) => {
+                    if (typeof event.data === 'string') {
+                        try {
+                            const data = JSON.parse(event.data);
+                            log(`收到事件: ${data.event}`, 'info');
+                            if (data.event === 'Error') {
+                                log(`错误: ${JSON.stringify(data)}`, 'error');
+                            }
+                        } catch (e) {
+                            log(`收到文本: ${event.data}`);
+                        }
+                    } else if (event.data instanceof ArrayBuffer) {
+                        // 收到音频数据，播放
+                        playAudioChunk(event.data);
+                    }
+                };
+
+                ws.onclose = (e) => {
+                    log(`WebSocket 断开: ${e.code} ${e.reason}`, 'error');
+                    stopSession();
+                };
+
+                ws.onerror = (e) => {
+                    log('WebSocket 错误', 'error');
+                    stopSession();
+                };
+
+            } catch (err) {
+                log(`启动失败: ${err.message}`, 'error');
+                updateStatus('启动失败', 'error');
+                document.getElementById('startBtn').disabled = false;
+            }
+        }
+
+        function startRecording() {
+            if (!mediaStream) return;
+
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: SAMPLE_RATE
+            });
+
+            audioInput = audioContext.createMediaStreamSource(mediaStream);
+            
+            // 使用 ScriptProcessor 处理音频 (注意: AudioWorklet 是更现代的选择)
+            processor = audioContext.createScriptProcessor(BUFFER_SIZE, 1, 1);
+
+            processor.onaudioprocess = (e) => {
+                if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+                const inputData = e.inputBuffer.getChannelData(0);
+                
+                // 转换 float32 (-1.0 到 1.0) 为 int16
+                const pcmData = new Int16Array(inputData.length);
+                for (let i = 0; i < inputData.length; i++) {
+                    const s = Math.max(-1, Math.min(1, inputData[i]));
+                    pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+
+                // 发送二进制数据
+                ws.send(pcmData.buffer);
+            };
+
+            audioInput.connect(processor);
+            processor.connect(audioContext.destination); // 需要连接到 destination 才能工作
+            
+            isRecording = true;
+            log('开始录音并发送音频数据...');
+        }
+
+        function stopSession() {
+            if (isRecording) {
+                log('停止会话');
+                isRecording = false;
+            }
+
+            if (processor) {
+                processor.disconnect();
+                processor = null;
+            }
+            if (audioInput) {
+                audioInput.disconnect();
+                audioInput = null;
+            }
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            if (ws) {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                }
+                ws = null;
+            }
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            updateStatus('已断开', 'normal');
+        }
+
+        // 简单的音频播放队列
+        let audioQueue = [];
+        let isPlaying = false;
+        let playbackContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        async function playAudioChunk(arrayBuffer) {
+            // 重新创建上下文以确保状态正常
+            if (playbackContext.state === 'suspended') {
+                await playbackContext.resume();
+            }
+
+            // 豆包返回的是 raw PCM 24k/16k s16le，需要转换
+            // 这里假设返回的是 int16 raw data
+            const int16Data = new Int16Array(arrayBuffer);
+            const float32Data = new Float32Array(int16Data.length);
+            
+            for (let i = 0; i < int16Data.length; i++) {
+                float32Data[i] = int16Data[i] / 32768.0;
+            }
+
+            const audioBuffer = playbackContext.createBuffer(1, float32Data.length, SAMPLE_RATE);
+            audioBuffer.copyToChannel(float32Data, 0);
+
+            const source = playbackContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(playbackContext.destination);
+            source.start();
+        }
+    </script>
+</body>
+</html>

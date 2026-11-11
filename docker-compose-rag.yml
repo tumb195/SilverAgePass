@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Elasticsearch - 关键词搜索引擎
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: silveragepass-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./elasticsearch-plugins:/usr/share/elasticsearch/plugins
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q 'green\\|yellow'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Neo4j - 知识图谱数据库（可选）
+  neo4j:
+    image: neo4j:5.15.0
+    container_name: silveragepass-neo4j
+    environment:
+      - NEO4J_AUTH=neo4j/silveragepass123
+      - NEO4J_PLUGINS=["apoc"]
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ChromaDB - 向量数据库（用于 RAG）
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: silveragepass-chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - rag-network
+
+volumes:
+  elasticsearch_data:
+  neo4j_data:
+  neo4j_logs:
+  chroma_data:
+
+networks:
+  rag-network:
+    driver: bridge

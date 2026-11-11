@@ -1,0 +1,85 @@
+package com.learning.silveragepass.entity;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+/**
+ * 血糖记录实体
+ */
+@Data
+@Entity
+@Table(name = "blood_sugar_records", indexes = {
+    @Index(name = "idx_bs_user_id", columnList = "userId"),
+    @Index(name = "idx_bs_measurement_date", columnList = "measurementDate")
+})
+@NoArgsConstructor
+@AllArgsConstructor
+public class BloodSugarRecord {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotNull
+    @Column(nullable = false)
+    private Long userId;           // 数据所属用户
+
+    @NotNull
+    @Column(nullable = false)
+    private Long creatorId;        // 记录创建者
+
+    @NotNull
+    @DecimalMin("1.0")
+    @DecimalMax("35.0")
+    @Column(nullable = false)
+    private Double glucoseValue;   // 血糖值 (mmol/L)
+
+    @NotNull
+    @Column(nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate measurementDate;  // 测量日期
+
+    @NotNull
+    @Column(nullable = false)
+    @JsonFormat(pattern = "HH:mm:ss")
+    private LocalTime measurementTime;  // 测量时间
+
+    @Enumerated(EnumType.STRING)
+    private MeasurementPeriod period;   // 测量时段（空腹/餐后等）
+
+    private String note;           // 备注
+
+    @Column(nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updateTime;
+
+    @PrePersist
+    public void prePersist() {
+        this.createTime = LocalDateTime.now();
+        this.updateTime = LocalDateTime.now();
+        if (this.measurementDate == null) {
+            this.measurementDate = LocalDate.now();
+        }
+        if (this.measurementTime == null) {
+            this.measurementTime = LocalTime.now();
+        }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updateTime = LocalDateTime.now();
+    }
+}

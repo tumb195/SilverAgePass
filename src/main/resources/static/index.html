@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银龄通行证 - 完整测试平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🏥 银龄通行证完整测试平台</h1>
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <span id="userName">未登录</span>
+                    <span class="badge badge-info" id="userRole">角色</span>
+                    <button onclick="logout()" class="btn-logout">退出登录</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 侧边导航 -->
+        <div class="main-content">
+            <nav class="sidebar">
+                <ul class="nav-menu">
+                    <li class="nav-item active" data-page="auth">
+                        <span class="icon">🔐</span>
+                        <span>认证管理</span>
+                    </li>
+                    <li class="nav-item" data-page="demands">
+                        <span class="icon">📋</span>
+                        <span>需求管理</span>
+                    </li>
+                    <li class="nav-item" data-page="demand-operations">
+                        <span class="icon">⚙️</span>
+                        <span>需求操作</span>
+                    </li>
+                    <li class="nav-item" data-page="user">
+                        <span class="icon">👤</span>
+                        <span>用户信息</span>
+                    </li>
+                    <li class="nav-item" data-page="warmcoin">
+                        <span class="icon">🪙</span>
+                        <span>暖龄币</span>
+                    </li>
+                    <li class="nav-item" data-page="messages">
+                        <span class="icon">💬</span>
+                        <span>消息中心</span>
+                    </li>
+                    <li class="nav-item" data-page="relatives">
+                        <span class="icon">👨‍👩‍👧‍👦</span>
+                        <span>亲属关系</span>
+                    </li>
+                    <li class="nav-item" data-page="test">
+                        <span class="icon">🧪</span>
+                        <span>权限测试</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- 主内容区域 -->
+            <main class="content">
+                <!-- 认证管理页面 -->
+                <div class="page" id="page-auth">
+                    <h2>🔐 认证管理</h2>
+                    
+                    <div class="card">
+                        <h3>1. 用户登录</h3>
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input type="text" id="loginUsername" placeholder="请输入用户名" value="admin">
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="loginPassword" placeholder="请输入密码" value="admin123">
+                        </div>
+                        <button onclick="login()" class="btn-primary">登录</button>
+                        <div class="result" id="loginResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. 发送短信验证码 (60秒限制)</h3>
+                        <div class="form-group">
+                            <label>手机号</label>
+                            <input type="text" id="codePhone" placeholder="请输入手机号" value="13800138000">
+                        </div>
+                        <button onclick="sendVerificationCode()" class="btn-primary" id="sendCodeBtn">发送验证码</button>
+                        <div class="result" id="sendCodeResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. 手机验证码登录</h3>
+                        <div class="form-group">
+                            <label>手机号</label>
+                            <input type="text" id="phoneLoginPhone" placeholder="请输入手机号" value="13800138000">
+                        </div>
+                        <div class="form-group">
+                            <label>验证码</label>
+                            <input type="text" id="phoneLoginCode" placeholder="请输入验证码">
+                        </div>
+                        <button onclick="phoneLogin()" class="btn-primary">验证码登录</button>
+                        <div class="result" id="phoneLoginResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. 用户注册</h3>
+                        <div class="form-group">
+                            <label>用户名 *</label>
+                            <input type="text" id="regUsername" placeholder="请输入用户名">
+                        </div>
+                        <div class="form-group">
+                            <label>密码 *</label>
+                            <input type="password" id="regPassword" placeholder="请输入密码">
+                        </div>
+                        <div class="form-group">
+                            <label>真实姓名</label>
+                            <input type="text" id="regRealName" placeholder="请输入真实姓名">
+                        </div>
+                        <div class="form-group">
+                            <label>手机号 *</label>
+                            <input type="text" id="regPhone" placeholder="请输入手机号">
+                        </div>
+                        <div class="form-group">
+                            <label>邮箱</label>
+                            <input type="email" id="regEmail" placeholder="请输入邮箱">
+                        </div>
+                        <div class="form-group">
+                            <label>验证码 *</label>
+                            <input type="text" id="regCode" placeholder="请输入验证码">
+                        </div>
+                        <div class="form-group">
+                            <label>角色</label>
+                            <select id="regRoles" multiple>
+                                <option value="user" selected>普通用户</option>
+                                <option value="volunteer">志愿者</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                            <small>按住Ctrl可多选</small>
+                        </div>
+                        <button onclick="register()" class="btn-primary">注册</button>
+                        <div class="result" id="registerResult"></div>
+                    </div>
+                </div>
+
+                <!-- 需求管理页面 -->
+                <div class="page" id="page-demands" style="display: none;">
+                    <h2>📋 需求管理</h2>
+                    
+                    <div class="card">
+                        <h3>1. 创建需求</h3>
+                        <div class="form-group">
+                            <label>需求标题 *</label>
+                            <input type="text" id="demandTitle" placeholder="例如：帮忙买菜">
+                        </div>
+                        <div class="form-group">
+                            <label>需求类型 *</label>
+                            <select id="demandType">
+                                <option value="LIFE_CARE">生活照料</option>
+                                <option value="HEALTH_SERVICE">健康服务</option>
+                                <option value="GOVERNMENT_ASSISTANCE">政务协助</option>
+                                <option value="SPIRITUAL_COMFORT">精神慰藉</option>
+                                <option value="TRAVEL_ASSISTANCE">出行辅助</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>需求描述 *</label>
+                            <textarea id="demandDescription" placeholder="请详细描述您的需求" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>服务地址 *</label>
+                            <input type="text" id="demandAddress" placeholder="例如：北京市朝阳区某某小区">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>纬度</label>
+                                <input type="number" id="demandLatitude" placeholder="39.9042" step="0.0001" value="39.9042">
+                            </div>
+                            <div class="form-group">
+                                <label>经度</label>
+                                <input type="number" id="demandLongitude" placeholder="116.4074" step="0.0001" value="116.4074">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>服务日期 *</label>
+                                <input type="date" id="demandDate">
+                            </div>
+                            <div class="form-group">
+                                <label>服务时间 *</label>
+                                <input type="time" id="demandTime" value="14:00">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>预计时长(分钟) *</label>
+                                <input type="number" id="demandDuration" placeholder="60" value="60">
+                            </div>
+                            <div class="form-group">
+                                <label>暖龄币奖励 *</label>
+                                <input type="number" id="demandReward" placeholder="10" value="10">
+                            </div>
+                        </div>
+                        <button onclick="createDemand()" class="btn-primary">创建需求</button>
+                        <div class="result" id="createDemandResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. 查询需求列表</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>状态筛选</label>
+                                <select id="queryStatus">
+                                    <option value="">全部状态</option>
+                                    <option value="WAITING">待接单</option>
+                                    <option value="ACCEPTED">已接单</option>
+                                    <option value="IN_PROGRESS">进行中</option>
+                                    <option value="COMPLETED">已完成</option>
+                                    <option value="CANCELLED">已取消</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>类型筛选</label>
+                                <select id="queryType">
+                                    <option value="">全部类型</option>
+                                    <option value="LIFE_CARE">生活照料</option>
+                                    <option value="HEALTH_SERVICE">健康服务</option>
+                                    <option value="GOVERNMENT_ASSISTANCE">政务协助</option>
+                                    <option value="SPIRITUAL_COMFORT">精神慰藉</option>
+                                    <option value="TRAVEL_ASSISTANCE">出行辅助</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>页码</label>
+                                <input type="number" id="queryPage" value="0" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>每页数量</label>
+                                <input type="number" id="querySize" value="20" min="1">
+                            </div>
+                        </div>
+                        <button onclick="queryDemands()" class="btn-primary">查询需求</button>
+                        <div class="result" id="queryDemandsResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. 获取需求详情</h3>
+                        <div class="form-group">
+                            <label>需求ID</label>
+                            <input type="number" id="getDemandId" placeholder="请输入需求ID">
+                        </div>
+                        <button onclick="getDemandById()" class="btn-primary">获取详情</button>
+                        <div class="result" id="getDemandResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. 需求统计数据</h3>
+                        <button onclick="getDemandStatistics()" class="btn-primary">获取统计数据</button>
+                        <div class="result" id="statisticsResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>5. 需求热力图数据</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>纬度</label>
+                                <input type="number" id="heatLatitude" placeholder="39.9042" step="0.0001" value="39.9042">
+                            </div>
+                            <div class="form-group">
+                                <label>经度</label>
+                                <input type="number" id="heatLongitude" placeholder="116.4074" step="0.0001" value="116.4074">
+                            </div>
+                            <div class="form-group">
+                                <label>半径(米)</label>
+                                <input type="number" id="heatRadius" placeholder="5000" value="5000">
+                            </div>
+                        </div>
+                        <button onclick="getHeatMapData()" class="btn-primary">获取热力图数据</button>
+                        <div class="result" id="heatMapResult"></div>
+                    </div>
+                </div>
+
+                <!-- 需求操作页面 -->
+                <div class="page" id="page-demand-operations" style="display: none;">
+                    <h2>⚙️ 需求操作</h2>
+                    
+                    <div class="card">
+                        <h3>1. 更新需求</h3>
+                        <div class="form-group">
+                            <label>需求ID *</label>
+                            <input type="number" id="updateDemandId" placeholder="请输入要更新的需求ID">
+                        </div>
+                        <div class="form-group">
+                            <label>新标题</label>
+                            <input type="text" id="updateTitle" placeholder="修改需求标题">
+                        </div>
+                        <div class="form-group">
+                            <label>新描述</label>
+                            <textarea id="updateDescription" placeholder="修改需求描述" rows="3"></textarea>
+                        </div>
+                        <button onclick="updateDemand()" class="btn-primary">更新需求</button>
+                        <div class="result" id="updateDemandResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. 取消需求</h3>
+                        <div class="form-group">
+                            <label>需求ID</label>
+                            <input type="number" id="cancelDemandId" placeholder="请输入要取消的需求ID">
+                        </div>
+                        <button onclick="cancelDemand()" class="btn-primary">取消需求</button>
+                        <div class="result" id="cancelDemandResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. 接单（志愿者接取需求）</h3>
+                        <div class="form-group">
+                            <label>需求ID</label>
+                            <input type="number" id="acceptDemandId" placeholder="请输入要接取的需求ID">
+                        </div>
+                        <button onclick="acceptDemand()" class="btn-primary">接单</button>
+                        <div class="result" id="acceptDemandResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. 开始服务</h3>
+                        <div class="form-group">
+                            <label>需求ID *</label>
+                            <input type="number" id="startDemandId" placeholder="请输入需求ID">
+                        </div>
+                        <div class="form-group">
+                            <label>服务凭证类型</label>
+                            <select id="startProofType">
+                                <option value="PHOTO">照片</option>
+                                <option value="VIDEO">视频</option>
+                                <option value="TEXT">文本</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>凭证内容</label>
+                            <input type="text" id="startProofContent" placeholder="例如：照片URL或文本描述">
+                        </div>
+                        <button onclick="startService()" class="btn-primary">开始服务</button>
+                        <div class="result" id="startServiceResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>5. 结束服务</h3>
+                        <div class="form-group">
+                            <label>需求ID *</label>
+                            <input type="number" id="endDemandId" placeholder="请输入需求ID">
+                        </div>
+                        <div class="form-group">
+                            <label>服务凭证类型</label>
+                            <select id="endProofType">
+                                <option value="PHOTO">照片</option>
+                                <option value="VIDEO">视频</option>
+                                <option value="TEXT">文本</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>凭证内容</label>
+                            <input type="text" id="endProofContent" placeholder="例如：照片URL或文本描述">
+                        </div>
+                        <button onclick="endService()" class="btn-primary">结束服务</button>
+                        <div class="result" id="endServiceResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>6. 分配暖龄币</h3>
+                        <div class="form-group">
+                            <label>需求ID *</label>
+                            <input type="number" id="distributeDemandId" placeholder="请输入需求ID">
+                        </div>
+                        <div class="form-group">
+                            <label>分配方式</label>
+                            <select id="distributeType">
+                                <option value="SELF">自己保留</option>
+                                <option value="PARENT">转赠父母</option>
+                                <option value="CHARITY">捐赠公益池</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="parentIdGroup" style="display: none;">
+                            <label>父母用户ID</label>
+                            <input type="number" id="distributeParentId" placeholder="请输入父母的用户ID">
+                        </div>
+                        <button onclick="distributeWarmCoin()" class="btn-primary">分配暖龄币</button>
+                        <div class="result" id="distributeWarmCoinResult"></div>
+                    </div>
+                </div>
+
+                <!-- 用户信息页面 -->
+                <div class="page" id="page-user" style="display: none;">
+                    <h2>👤 用户信息管理</h2>
+                    
+                    <div class="card">
+                        <h3>1. 获取当前用户信息</h3>
+                        <button onclick="getCurrentUser()" class="btn-primary">获取我的信息</button>
+                        <div class="result" id="currentUserResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. 更新用户信息</h3>
+                        <div class="form-group">
+                            <label>用户ID</label>
+                            <input type="number" id="updateUserId" placeholder="当前用户ID（自动填充）" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>真实姓名</label>
+                            <input type="text" id="updateRealName" placeholder="请输入真实姓名">
+                        </div>
+                        <div class="form-group">
+                            <label>邮箱</label>
+                            <input type="email" id="updateEmail" placeholder="请输入邮箱">
+                        </div>
+                        <button onclick="updateUser()" class="btn-primary">更新信息</button>
+                        <div class="result" id="updateUserResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. 获取保存的地址</h3>
+                        <button onclick="getSavedAddresses()" class="btn-primary">获取地址列表</button>
+                        <div class="result" id="savedAddressesResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. 添加保存的地址</h3>
+                        <div class="form-group">
+                            <label>地址</label>
+                            <input type="text" id="newAddress" placeholder="请输入新地址">
+                        </div>
+                        <button onclick="addSavedAddress()" class="btn-primary">添加地址</button>
+                        <div class="result" id="addAddressResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>5. 删除保存的地址</h3>
+                        <div class="form-group">
+                            <label>地址</label>
+                            <input type="text" id="deleteAddress" placeholder="请输入要删除的地址">
+                        </div>
+                        <button onclick="removeSavedAddress()" class="btn-primary">删除地址</button>
+                        <div class="result" id="deleteAddressResult"></div>
+                    </div>
+                </div>
+
+                <!-- 暖龄币页面 -->
+                <div class="page" id="page-warmcoin" style="display: none;">
+                    <h2>🪙 暖龄币记录</h2>
+                    
+                    <div class="card">
+                        <h3>1. 我的暖龄币记录</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>页码</label>
+                                <input type="number" id="warmCoinPage" value="0" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>每页数量</label>
+                                <input type="number" id="warmCoinSize" value="10" min="1">
+                            </div>
+                        </div>
+                        <button onclick="getMyWarmCoinRecords()" class="btn-primary">查询记录</button>
+                        <div class="result" id="warmCoinRecordsResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. 按类型查询记录</h3>
+                        <div class="form-group">
+                            <label>记录类型</label>
+                            <select id="warmCoinRecordType">
+                                <option value="EARNED">获得</option>
+                                <option value="SPENT">支出</option>
+                                <option value="TRANSFER">转账</option>
+                                <option value="CHARITY">公益</option>
+                            </select>
+                        </div>
+                        <button onclick="getWarmCoinRecordsByType()" class="btn-primary">查询</button>
+                        <div class="result" id="warmCoinTypeResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. 查询需求相关的暖龄币记录</h3>
+                        <div class="form-group">
+                            <label>需求ID</label>
+                            <input type="number" id="warmCoinDemandId" placeholder="请输入需求ID">
+                        </div>
+                        <button onclick="getWarmCoinByDemand()" class="btn-primary">查询</button>
+                        <div class="result" id="warmCoinDemandResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. 暖龄币统计</h3>
+                        <button onclick="getWarmCoinStats()" class="btn-primary">获取统计数据</button>
+                        <div class="result" id="warmCoinStatsResult"></div>
+                    </div>
+                </div>
+
+                <!-- 消息中心页面 -->
+                <div class="page" id="page-messages" style="display: none;">
+                    <h2>💬 消息中心</h2>
+                    
+                    <div class="card">
+                        <h3>1. 我的消息列表</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>页码</label>
+                                <input type="number" id="messagePage" value="0" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>每页数量</label>
+                                <input type="number" id="messageSize" value="10" min="1">
+                            </div>
+                        </div>
+                        <button onclick="getMyMessages()" class="btn-primary">获取消息列表</button>
+                        <div class="result" id="messagesResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. 按类型查询消息</h3>
+                        <div class="form-group">
+                            <label>消息类型</label>
+                            <select id="messageTypeFilter">
+                                <option value="SYSTEM">系统消息</option>
+                                <option value="DEMAND">需求相关</option>
+                                <option value="WARMCOIN">暖龄币相关</option>
+                                <option value="RELATIVE">亲属相关</option>
+                            </select>
+                        </div>
+                        <button onclick="getMessagesByType()" class="btn-primary">查询</button>
+                        <div class="result" id="messageTypeResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. 获取消息详情</h3>
+                        <div class="form-group">
+                            <label>消息ID</label>
+                            <input type="number" id="messageDetailId" placeholder="请输入消息ID">
+                        </div>
+                        <button onclick="getMessageDetail()" class="btn-primary">获取详情</button>
+                        <div class="result" id="messageDetailResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. 未读消息数量</h3>
+                        <button onclick="getUnreadCount()" class="btn-primary">查询未读数量</button>
+                        <div class="result" id="unreadCountResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>5. 标记消息为已读</h3>
+                        <div class="form-group">
+                            <label>消息ID</label>
+                            <input type="number" id="readMessageId" placeholder="请输入消息ID">
+                        </div>
+                        <button onclick="markMessageAsRead()" class="btn-primary">标记已读</button>
+                        <div class="result" id="markReadResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>6. 批量标记已读</h3>
+                        <div class="form-group">
+                            <label>消息ID列表（逗号分隔）</label>
+                            <input type="text" id="batchReadIds" placeholder="例如：1,2,3">
+                        </div>
+                        <button onclick="batchMarkRead()" class="btn-primary">批量标记</button>
+                        <div class="result" id="batchReadResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>7. 删除消息</h3>
+                        <div class="form-group">
+                            <label>消息ID</label>
+                            <input type="number" id="deleteMessageId" placeholder="请输入消息ID">
+                        </div>
+                        <button onclick="deleteMessage()" class="btn-primary">删除消息</button>
+                        <div class="result" id="deleteMessageResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>8. 批量删除消息</h3>
+                        <div class="form-group">
+                            <label>消息ID列表（逗号分隔）</label>
+                            <input type="text" id="batchDeleteIds" placeholder="例如：1,2,3">
+                        </div>
+                        <button onclick="batchDeleteMessages()" class="btn-primary">批量删除</button>
+                        <div class="result" id="batchDeleteResult"></div>
+                    </div>
+                </div>
+
+                <!-- 亲属关系页面 -->
+                <div class="page" id="page-relatives" style="display: none;">
+                    <h2>👨‍👩‍👧‍👦 亲属关系管理</h2>
+                    
+                    <div class="card">
+                        <h3>1. 我的亲属列表</h3>
+                        <button onclick="getMyRelatives()" class="btn-primary">查询亲属列表</button>
+                        <div class="result" id="relativesResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. 待处理的亲属请求</h3>
+                        <button onclick="getPendingRelatives()" class="btn-primary">查询待处理请求</button>
+                        <div class="result" id="pendingRelativesResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. 我发送的亲属请求</h3>
+                        <button onclick="getSentRelatives()" class="btn-primary">查询已发送请求</button>
+                        <div class="result" id="sentRelativesResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. 发送亲属关联请求</h3>
+                        <div class="form-group">
+                            <label>亲属用户ID *</label>
+                            <input type="number" id="relativeUserId" placeholder="请输入亲属的用户ID">
+                        </div>
+                        <div class="form-group">
+                            <label>关系类型 *</label>
+                            <select id="relationshipType">
+                                <option value="PARENT">父母</option>
+                                <option value="CHILD">子女</option>
+                                <option value="SPOUSE">配偶</option>
+                                <option value="SIBLING">兄弟姐妹</option>
+                                <option value="OTHER">其他</option>
+                            </select>
+                        </div>
+                        <button onclick="sendRelativeRequest()" class="btn-primary">发送请求</button>
+                        <div class="result" id="sendRequestResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>5. 接受亲属请求</h3>
+                        <div class="form-group">
+                            <label>请求ID</label>
+                            <input type="number" id="acceptRequestId" placeholder="请输入请求ID">
+                        </div>
+                        <button onclick="acceptRelativeRequest()" class="btn-primary">接受请求</button>
+                        <div class="result" id="acceptRequestResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>6. 拒绝亲属请求</h3>
+                        <div class="form-group">
+                            <label>请求ID</label>
+                            <input type="number" id="rejectRequestId" placeholder="请输入请求ID">
+                        </div>
+                        <button onclick="rejectRelativeRequest()" class="btn-primary">拒绝请求</button>
+                        <div class="result" id="rejectRequestResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>7. 更新需求分享设置</h3>
+                        <div class="form-group">
+                            <label>亲属关系ID</label>
+                            <input type="number" id="shareRelativeId" placeholder="请输入亲属关系ID">
+                        </div>
+                        <div class="form-group">
+                            <label>是否分享需求</label>
+                            <select id="shareDemands">
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <button onclick="updateShareSetting()" class="btn-primary">更新设置</button>
+                        <div class="result" id="shareSettingResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>8. 删除亲属关系</h3>
+                        <div class="form-group">
+                            <label>亲属关系ID</label>
+                            <input type="number" id="deleteRelativeId" placeholder="请输入亲属关系ID">
+                        </div>
+                        <button onclick="deleteRelative()" class="btn-primary">删除关系</button>
+                        <div class="result" id="deleteRelativeResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>9. 查找亲属关系</h3>
+                        <div class="form-group">
+                            <label>亲属用户ID</label>
+                            <input type="number" id="checkRelativeId" placeholder="请输入亲属用户ID">
+                        </div>
+                        <button onclick="checkRelative()" class="btn-primary">查找关系</button>
+                        <div class="result" id="checkRelativeResult"></div>
+                    </div>
+                </div>
+
+                <!-- 权限测试页面 -->
+                <div class="page" id="page-test" style="display: none;">
+                    <h2>🧪 权限测试</h2>
+                    
+                    <div class="card">
+                        <h3>1. 公共接口测试（无需登录）</h3>
+                        <button onclick="testPublicAccess()" class="btn-primary">测试公共访问</button>
+                        <div class="result" id="publicAccessResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. 用户接口测试（需要登录）</h3>
+                        <button onclick="testUserAccess()" class="btn-primary">测试用户访问</button>
+                        <div class="result" id="userAccessResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. 志愿者接口测试（需要志愿者权限）</h3>
+                        <button onclick="testVolunteerAccess()" class="btn-primary">测试志愿者访问</button>
+                        <div class="result" id="volunteerAccessResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. 管理员接口测试（需要管理员权限）</h3>
+                        <button onclick="testAdminAccess()" class="btn-primary">测试管理员访问</button>
+                        <div class="result" id="adminAccessResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>5. 获取用户详细信息</h3>
+                        <button onclick="testProfile()" class="btn-primary">获取Profile</button>
+                        <div class="result" id="profileResult"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // 分配类型选择监听
+        document.getElementById('distributeType')?.addEventListener('change', function() {
+            const parentGroup = document.getElementById('parentIdGroup');
+            if (this.value === 'PARENT') {
+                parentGroup.style.display = 'block';
+            } else {
+                parentGroup.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
